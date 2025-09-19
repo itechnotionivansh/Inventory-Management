@@ -1,4 +1,3 @@
-# app/services/auth_service.py - FIXED VERSION
 import hashlib
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token, create_refresh_token
@@ -155,21 +154,21 @@ class AuthService:
         
         return True
 
-    @staticmethod
-    def create_admin_user(name="Admin", email="admin@gmail.com", password="123456"):
-        """Create admin user if it doesn't exist"""
-        try:
-            admin = User.query.filter_by(email=email).first()
-            if not admin:
-                admin = User(name=name, email=email, role='Admin')
-                admin.set_password(password)
-                db.session.add(admin)
-                db.session.commit()
-                print(f"✅ Admin user created: {email}")
-            else:
-                print(f"ℹ️ Admin user already exists: {email}")
-            return admin
-        except Exception as e:
-            db.session.rollback()
-            print(f"❌ Error creating admin user: {e}")
-            return None
+    # @staticmethod
+    # def create_admin_user(name="Admin", email="admin@gmail.com", password="123456"):
+    #     """Create admin user if it doesn't exist"""
+    #     try:
+    #         admin = User.query.filter_by(email=email).first()
+    #         if not admin:
+    #             admin = User(name=name, email=email, role='Admin')
+    #             admin.set_password(password)
+    #             db.session.add(admin)
+    #             db.session.commit()
+    #             print(f"✅ Admin user created: {email}")
+    #         else:
+    #             print(f"ℹ️ Admin user already exists: {email}")
+    #         return admin
+    #     except Exception as e:
+    #         db.session.rollback()
+    #         print(f"❌ Error creating admin user: {e}")
+    #         return None
