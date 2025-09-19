@@ -1,0 +1,28 @@
+
+# Updated requirements.txt
+Flask==3.0.3
+python-dotenv==1.0.1
+
+# Database
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+PyMySQL==1.1.1
+
+# Auth & Security
+Flask-JWT-Extended==4.6.0
+Werkzeug==3.0.3
+Flask-Talisman==1.1.0
+Flask-Limiter==3.6.0
+redis==5.0.1
+
+# Validation
+pydantic==2.9.2
+email-validator==2.2.0
+
+# Utils
+Flask-Cors==5.0.0
+Flask-Mail==0.10.0
+cryptography==43.0.3
+
+# Development
+Flask-Shell-IPython==0.5.3
