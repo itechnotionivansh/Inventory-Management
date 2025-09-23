@@ -5,6 +5,7 @@ from app.extensions import db
 from app.services.category_service import CategoryService
 from app.services.auth_service import AuthService
 from app.services.product_service import ProductService
+from app.services.auth_service import AuthService 
 
 @click.command("init-db")
 @with_appcontext
@@ -24,6 +25,13 @@ def seed_data():
     """Seed default data."""
     seed_default_data()
     click.echo("✅ Default data seeded successfully")
+
+@click.command('seed-data')
+@with_appcontext
+def seed_data():
+    """Seeds the database with initial data."""
+    CategoryService.seed_default_categories()
+    AuthService.create_admin_user() 
 
 def seed_default_data():
     """Seed default categories, admin user, and sample products."""

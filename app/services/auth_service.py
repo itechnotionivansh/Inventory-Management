@@ -134,41 +134,34 @@ class AuthService:
 
     @staticmethod
     def change_password(user_id_str, current_password, new_password):
-        """Change user password and revoke all refresh tokens"""
-        # FIXED: Convert string back to int
+        """Change user password and revoke all refresh tokens. Admin can also change password."""
         user_id = int(user_id_str) if isinstance(user_id_str, str) else user_id_str
-        
         user = User.query.get(user_id)
         if not user:
             raise ValueError("User not found")
-        
+        # Always require current password for security, even for admin
         if not user.check_password(current_password):
             raise ValueError("Current password is incorrect")
-        
         user.set_password(new_password)
-        
-        # Revoke all refresh tokens when password changes
         RefreshToken.query.filter_by(user_id=user_id).delete()
-        
         db.session.commit()
-        
         return True
 
-    # @staticmethod
-    # def create_admin_user(name="Admin", email="admin@gmail.com", password="123456"):
-    #     """Create admin user if it doesn't exist"""
-    #     try:
-    #         admin = User.query.filter_by(email=email).first()
-    #         if not admin:
-    #             admin = User(name=name, email=email, role='Admin')
-    #             admin.set_password(password)
-    #             db.session.add(admin)
-    #             db.session.commit()
-    #             print(f"✅ Admin user created: {email}")
-    #         else:
-    #             print(f"ℹ️ Admin user already exists: {email}")
-    #         return admin
-    #     except Exception as e:
-    #         db.session.rollback()
-    #         print(f"❌ Error creating admin user: {e}")
-    #         return None
+    @staticmethod
+    def create_admin_user(name="Admin", email="admin@gmail.com", password="123456"):
+        """Create admin user if it doesn't exist"""
+        try:
+            admin = User.query.filter_by(email=email).first()
+            if not admin:
+                admin = User(name=name, email=email, role='Admin')
+                admin.set_password(password)
+                db.session.add(admin)
+                db.session.commit()
+                print(f"✅ Admin user created: {email}")
+            else:
+                print(f"ℹ️ Admin user already exists: {email}")
+            return admin
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error creating admin user: {e}")
+            return None

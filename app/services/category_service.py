@@ -31,31 +31,31 @@ class CategoryService:
             db.session.rollback()
             raise
 
-    @staticmethod
-    def update_category(category_id: int, name: str) -> Category:
-        """Update an existing category"""
-        try:
-            category = Category.query.filter_by(id=category_id, is_active=True).first()
-            if not category:
-                raise ValueError("Category not found")
+    # @staticmethod
+    # def update_category(category_id: int, name: str) -> Category:
+    #     """Update an existing category"""
+    #     try:
+    #         category = Category.query.filter_by(id=category_id, is_active=True).first()
+    #         if not category:
+    #             raise ValueError("Category not found")
             
-            # Check for duplicate name (excluding current category)
-            existing_category = Category.query.filter(
-                db.func.lower(Category.name) == name.lower(),
-                Category.is_active == True,
-                Category.id != category_id
-            ).first()
-            if existing_category:
-                raise ValueError("Category name already exists")
+    #         # Check for duplicate name (excluding current category)
+    #         existing_category = Category.query.filter(
+    #             db.func.lower(Category.name) == name.lower(),
+    #             Category.is_active == True,
+    #             Category.id != category_id
+    #         ).first()
+    #         if existing_category:
+    #             raise ValueError("Category name already exists")
             
-            category.name = name
-            db.session.commit()
+    #         category.name = name
+    #         db.session.commit()
             
-            return category
+    #         return category
             
-        except Exception as e:
-            db.session.rollback()
-            raise
+    #     except Exception as e:
+    #         db.session.rollback()
+    #         raise
 
     @staticmethod
     def delete_category(category_id: int) -> bool:
