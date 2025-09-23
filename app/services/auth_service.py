@@ -6,7 +6,57 @@ from app.models.user import User
 from app.models.refresh_token import RefreshToken
 from sqlalchemy.exc import IntegrityError
 
+from flask_mail import Message
+from flask import current_app, url_for
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from app.extensions import mail
+
 class AuthService:
+    @staticmethod
+    def generate_reset_token(email):
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        return s.dumps(email, salt="password-reset-salt")
+
+    @staticmethod
+    def verify_reset_token(token, expiration=3600):
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        try:
+            email = s.loads(token, salt="password-reset-salt", max_age=expiration)
+        except (SignatureExpired, BadSignature):
+            return None
+        return email
+
+    @staticmethod
+    def send_reset_email(user, token):
+        reset_url = url_for('auth.reset_password', token=token, _external=True)
+        msg = Message(
+            subject="Password Reset Request",
+            recipients=[user.email],
+            body=f"Hello {user.name},\n\nTo reset your password, click the following link (valid for 1 hour):\n{reset_url}\n\nIf you did not request this, please ignore this email."
+        )
+        mail.send(msg)
+
+    @staticmethod
+    def forgot_password(email):
+        user = User.query.filter_by(email=email, is_active=True).first()
+        if not user:
+            raise ValueError("No user found with this email")
+        token = AuthService.generate_reset_token(user.email)
+        AuthService.send_reset_email(user, token)
+        return True
+
+    @staticmethod
+    def reset_password(token, new_password):
+        email = AuthService.verify_reset_token(token)
+        if not email:
+            raise ValueError("Invalid or expired token")
+        user = User.query.filter_by(email=email, is_active=True).first()
+        if not user:
+            raise ValueError("User not found")
+        user.set_password(new_password)
+        RefreshToken.query.filter_by(user_id=user.id).delete()
+        db.session.commit()
+        return True
     
     @staticmethod
     def register_user(name, email, password):

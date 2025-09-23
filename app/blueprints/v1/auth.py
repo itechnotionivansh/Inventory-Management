@@ -3,11 +3,44 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from pydantic import ValidationError
 from app.services.auth_service import AuthService
-from app.schemas.auth_schemas import RegisterSchema, LoginSchema, ChangePasswordSchema
-from app.models.user import User
+from app.schemas.auth_schemas import RegisterSchema, LoginSchema, ChangePasswordSchema, ForgotPasswordSchema, ResetPasswordSchema
 from app.extensions import limiter
 
 bp = Blueprint("auth", __name__)
+
+@bp.route("/forgot-password", methods=["POST"])
+@limiter.limit("5 per minute")
+def forgot_password():
+    try:
+        data = ForgotPasswordSchema(**request.json)
+        AuthService.forgot_password(data.email)
+        return jsonify({"message": "Password reset email sent if user exists"}), 200
+    except ValidationError as e:
+        return jsonify({"error": "Validation failed", "details": e.errors()}), 400
+    except ValueError as e:
+        # For security, do not reveal if user exists
+        return jsonify({"message": "Password reset email sent if user exists"}), 200
+    except Exception as e:
+        return jsonify({"error": "Failed to send reset email"}), 500
+
+
+@bp.route("/reset-password", methods=["POST"])
+@limiter.limit("5 per minute")
+def reset_password():
+    try:
+        data = ResetPasswordSchema(**request.json)
+        AuthService.reset_password(data.token, data.new_password)
+        return jsonify({"message": "Password has been reset successfully"}), 200
+    except ValidationError as e:
+        return jsonify({"error": "Validation failed", "details": e.errors()}), 400
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": "Failed to reset password"}), 500
+from app.models.user import User
+from app.extensions import limiter
+
+
 
 @bp.route("/register", methods=["POST"])
 @limiter.limit("5 per minute")

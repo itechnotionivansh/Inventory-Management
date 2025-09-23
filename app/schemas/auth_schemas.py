@@ -25,6 +25,32 @@ class RegisterSchema(BaseModel):
         return self
 
 
+class ForgotPasswordSchema(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    model_config = {"extra": "forbid"}
+
+
+class ResetPasswordSchema(BaseModel):
+    token: str = Field(..., description="Password reset token")
+    new_password: str = Field(..., min_length=6, max_length=128, description="New password")
+    confirm_new_password: Optional[str] = Field(None, description="New password confirmation")
+
+    model_config = {"extra": "forbid"}
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if len(v) < 6:
+            raise ValueError("New password must be at least 6 characters long")
+        return v
+
+    @model_validator(mode="after")
+    def passwords_match(self):
+        if self.confirm_new_password is not None and self.new_password != self.confirm_new_password:
+            raise ValueError("New password and confirm_new_password do not match")
+        return self
+
+
 class LoginSchema(BaseModel):
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., min_length=1, description="User password")
