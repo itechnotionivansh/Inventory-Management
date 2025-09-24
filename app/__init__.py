@@ -3,7 +3,6 @@ from flask import Flask
 from flask_cors import cross_origin
 from .config import Config
 from .extensions import db, migrate, jwt, cors, limiter, mail
-from .utils.error_handlers import register_error_handlers
 
 def create_app():
     app = Flask(__name__)
@@ -23,8 +22,6 @@ def create_app():
     # Import models (important for migrations)
     from app.models import User, Category, Product, RefreshToken
 
-    # Register error handlers
-    register_error_handlers(app)
 
     # Register blueprints
     register_blueprints(app)
@@ -37,9 +34,7 @@ def create_app():
 
 def register_blueprints(app):
     """Register all blueprints"""
-    from .blueprints.v1 import health, auth, products, categories
-    
-    # app.register_blueprint(health.bp, url_prefix="/api/v1/health")
+    from .blueprints.v1 import auth, products, categories
     app.register_blueprint(auth.bp, url_prefix="/api/v1/auth")
     app.register_blueprint(products.bp, url_prefix="/api/v1/products")
     app.register_blueprint(categories.bp, url_prefix="/api/v1/categories")

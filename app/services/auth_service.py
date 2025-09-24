@@ -6,7 +6,57 @@ from app.models.user import User
 from app.models.refresh_token import RefreshToken
 from sqlalchemy.exc import IntegrityError
 
+from flask_mail import Message
+from flask import current_app, url_for
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from app.extensions import mail
+
 class AuthService:
+    @staticmethod
+    def generate_reset_token(email):
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        return s.dumps(email, salt="password-reset-salt")
+
+    @staticmethod
+    def verify_reset_token(token, expiration=3600):
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        try:
+            email = s.loads(token, salt="password-reset-salt", max_age=expiration)
+        except (SignatureExpired, BadSignature):
+            return None
+        return email
+
+    @staticmethod
+    def send_reset_email(user, token):
+        reset_url = f"{current_app.config['FRONTEND_URL']}/{token}"
+        msg = Message(
+            subject="Password Reset Request",
+            recipients=[user.email],
+            body=f"Hello {user.name},\n\nTo reset your password, click the following link (valid for 1 hour):\n{reset_url}\n\nIf you did not request this, please ignore this email."
+        )
+        mail.send(msg)
+
+    @staticmethod
+    def forgot_password(email):
+        user = User.query.filter_by(email=email, is_active=True).first()
+        if not user:
+            raise ValueError("No user found with this email")
+        token = AuthService.generate_reset_token(user.email)
+        AuthService.send_reset_email(user, token)
+        return True
+
+    @staticmethod
+    def reset_password(token, new_password):
+        email = AuthService.verify_reset_token(token)
+        if not email:
+            raise ValueError("Invalid or expired token")
+        user = User.query.filter_by(email=email, is_active=True).first()
+        if not user:
+            raise ValueError("User not found")
+        user.set_password(new_password)
+        RefreshToken.query.filter_by(user_id=user.id).delete()
+        db.session.commit()
+        return True
     
     @staticmethod
     def register_user(name, email, password):
@@ -134,41 +184,34 @@ class AuthService:
 
     @staticmethod
     def change_password(user_id_str, current_password, new_password):
-        """Change user password and revoke all refresh tokens"""
-        # FIXED: Convert string back to int
+        """Change user password and revoke all refresh tokens. Admin can also change password."""
         user_id = int(user_id_str) if isinstance(user_id_str, str) else user_id_str
-        
         user = User.query.get(user_id)
         if not user:
             raise ValueError("User not found")
-        
+        # Always require current password for security, even for admin
         if not user.check_password(current_password):
             raise ValueError("Current password is incorrect")
-        
         user.set_password(new_password)
-        
-        # Revoke all refresh tokens when password changes
         RefreshToken.query.filter_by(user_id=user_id).delete()
-        
         db.session.commit()
-        
         return True
 
-    # @staticmethod
-    # def create_admin_user(name="Admin", email="admin@gmail.com", password="123456"):
-    #     """Create admin user if it doesn't exist"""
-    #     try:
-    #         admin = User.query.filter_by(email=email).first()
-    #         if not admin:
-    #             admin = User(name=name, email=email, role='Admin')
-    #             admin.set_password(password)
-    #             db.session.add(admin)
-    #             db.session.commit()
-    #             print(f"✅ Admin user created: {email}")
-    #         else:
-    #             print(f"ℹ️ Admin user already exists: {email}")
-    #         return admin
-    #     except Exception as e:
-    #         db.session.rollback()
-    #         print(f"❌ Error creating admin user: {e}")
-    #         return None
+    @staticmethod
+    def create_admin_user(name="Admin", email="admin@gmail.com", password="123456"):
+        """Create admin user if it doesn't exist"""
+        try:
+            admin = User.query.filter_by(email=email).first()
+            if not admin:
+                admin = User(name=name, email=email, role='Admin')
+                admin.set_password(password)
+                db.session.add(admin)
+                db.session.commit()
+                print(f"✅ Admin user created: {email}")
+            else:
+                print(f"ℹ️ Admin user already exists: {email}")
+            return admin
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error creating admin user: {e}")
+            return None
