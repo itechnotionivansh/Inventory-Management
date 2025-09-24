@@ -28,7 +28,7 @@ class AuthService:
 
     @staticmethod
     def send_reset_email(user, token):
-        reset_url = url_for('auth.reset_password', token=token, _external=True)
+        reset_url = f"{current_app.config['FRONTEND_URL']}/{token}"
         msg = Message(
             subject="Password Reset Request",
             recipients=[user.email],

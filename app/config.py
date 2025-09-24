@@ -11,6 +11,7 @@ class Config:
     FLASK_APP = os.getenv("FLASK_APP", "run.py")
     SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key")
     DEBUG = os.getenv("FLASK_ENV") == "development"
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
