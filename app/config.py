@@ -11,6 +11,7 @@ class Config:
     FLASK_APP = os.getenv("FLASK_APP", "run.py")
     SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key")
     DEBUG = os.getenv("FLASK_ENV") == "development"
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
@@ -30,13 +31,13 @@ class Config:
     # CORS
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
 
-    # # Mail
-    # MAIL_SERVER = os.getenv("MAIL_SERVER", "localhost")
-    # MAIL_PORT = int(os.getenv("MAIL_PORT", 25))
-    # MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "false").lower() == "true"
-    # MAIL_USERNAME = os.getenv("MAIL_USERNAME")
-    # MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
-    # MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
+    # Mail
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "localhost")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 25))
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "false").lower() == "true"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
 
     # Rate limiting
     RATELIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "100 per hour")
